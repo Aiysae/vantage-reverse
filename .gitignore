@@ -1,0 +1,16 @@
+.env
+agent.env
+.venv/
+**/.venv/
+**/node_modules/
+**/__pycache__/
+**/*.pyc
+**/.DS_Store
+**/dist/
+tasks/
+evidence/
+backups/
+.website-sessions/
+.playwright-mcp/
+tools/craft-anything/
+tools/runtime/

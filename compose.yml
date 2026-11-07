@@ -1,0 +1,52 @@
+name: vantage-reverse
+services:
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_DB: app
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U postgres -d app"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  backend:
+    image: vantage-reverse-app:local
+    build:
+      context: ./app
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:18780:8000"
+    environment:
+      PROJECT_NAME: System Workbench
+      LOCAL_DESKTOP_MODE: "true"
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY}
+      FIRST_SUPERUSER: ${FIRST_SUPERUSER:?Set FIRST_SUPERUSER}
+      FIRST_SUPERUSER_PASSWORD: ${FIRST_SUPERUSER_PASSWORD:?Set password}
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/app
+      FRONTEND_HOST: http://127.0.0.1:18780
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_TLS: "false"
+      EMAILS_FROM_EMAIL: info@example.com
+    command: [bash, -c, "bash scripts/prestart.sh && exec fastapi run --workers 2"]
+    healthcheck:
+      test: [CMD, curl, -f, "http://localhost:8000/api/v1/utils/health-check/"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 30s
+  mailpit:
+    image: axllent/mailpit:v1.31.5
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:18725:8025"
+volumes:
+  db-data:

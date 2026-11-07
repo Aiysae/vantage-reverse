@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@playwright/mcp": "0.0.83",
+    "rea-agents": "6.4.0"
+  },
+  "overrides": {
+    "zod": "4.6.6"
+  }
+}
